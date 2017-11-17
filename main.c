@@ -2,7 +2,23 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
 #include <time.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+
+int randint() {
+  int fd = open("/dev/random", O_RDONLY);
+  int buffer;
+  read(fd, &buffer, sizeof(int));
+  if (errno) {
+    printf("%s", strerror(errno));
+  }
+  buffer = abs(buffer%15 + 5);
+  close(fd);
+  return buffer;
+}
 
 int main() {
   //parent process
@@ -22,23 +38,21 @@ int main() {
       exit(1);
     }
     else{
-      srand( time(NULL) );
       int p = getpid();
       printf("child pid: %d\n", p);
-      int rand_int = (rand()%15) + 5;
+      int rand_int = randint();
       sleep(rand_int);
       printf("child %d is done\n", p);
       return rand_int;
     }
   }
   else {
-    srand( time(NULL) );
     int p = getpid();
     printf("child pid: %d\n", p);
-    int rand_int = (rand()%15) + 5;
-    sleep(rand_int);
+    int rands = randint();
+    sleep(rands);
     printf("child %d is done\n", p);
-    return rand_int;
+    return rands;
   }
   return 0;
 }
